@@ -9,8 +9,8 @@ int main( int argc, char** argv){
 
     ros::NodeHandle node;
 
-       RobotHaptic robot(node, 2000, "/iiwa/command/CartesianPose", "/chai3d/position", "/gripper_topic","/iiwa/state/CartesianPose",
-    "/interface/start", "/interface/scale", "/interface/lock_axis");
+    RobotHaptic robot(node, 2000, "/iiwa/command/CartesianPose", "/chai3d/position", "/gripper_topic","/iiwa/state/CartesianPose",
+                      "/interface/start", "/interface/scale", "/interface/lock_axis");
 
     robot.publishRobotData();
 
