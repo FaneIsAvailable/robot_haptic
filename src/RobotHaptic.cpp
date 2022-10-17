@@ -73,7 +73,7 @@ void RobotHaptic::publishRobotData(){
                 if(axis_lock[0]==1)
                     robotPosition.pose.position.x = robotPosition.pose.position.x;
                 else if(axis_lock[0]==0)
-                    robotPosition.pose.position.x = robotPosition.pose.position.x + hapticDisplacement.x/1000 *motionScale;
+                    robotPosition.pose.position.x = robotPosition.pose.position.x - hapticDisplacement.x/1000 *motionScale;
                 if(axis_lock[1]==1)
                     robotPosition.pose.position.y = robotPosition.pose.position.y;
                 else if(axis_lock[1]==0)
@@ -81,7 +81,7 @@ void RobotHaptic::publishRobotData(){
                 if(axis_lock[2]==1)
                     robotPosition.pose.position.z = robotPosition.pose.position.z;
                 else if(axis_lock[2]==0)
-                    robotPosition.pose.position.z = robotPosition.pose.position.z + hapticDisplacement.z/1000 *motionScale;
+                    robotPosition.pose.position.z = robotPosition.pose.position.z - hapticDisplacement.z/1000 *motionScale;
                 
                 
 
@@ -168,7 +168,7 @@ void RobotHaptic::InterfScaleCallBack(const std_msgs::Float64::ConstPtr &data){
 }
 
 void RobotHaptic::InterfAxisLockCallBack(const geometry_msgs::Vector3::ConstPtr &data){
-    this->axis_lock[0] = this->data.x;
-    this->axis_lock[1] = this->data.y;
-    this->axis_lock[2] = this->data.z;
+    this->axis_lock[0] = data->x;
+    this->axis_lock[1] = data->y;
+    this->axis_lock[2] = data->z;
 }
