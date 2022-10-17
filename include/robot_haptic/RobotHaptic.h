@@ -64,11 +64,11 @@ class RobotHaptic
         double robotEuler[3];
         double robotQuat[4];
 
-        bool teleopStarted = false;
+        bool teleopStarted;
 
-        int axis_lock[3] = {0};
+        int axis_lock[3];
 
-        double motionScale = 2.0;
+        double motionScale;
 
         void RobotPositionCallBack(const iiwa_msgs::CartesianPose::ConstPtr &data);
 

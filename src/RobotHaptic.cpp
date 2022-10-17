@@ -7,6 +7,10 @@ RobotHaptic::RobotHaptic(ros::NodeHandle node, float loopRate, std::string robot
                          hapticPositionTopic(hapticPositionTopic), switchPositionTopic(switchPositionTopic),robotStateTopic(robotStateTopic),
                          interfStartTopic(interfStartTopic), interfScaleTopic(interfScaleTopic), interfAxisLockTopic(interfAxisLockTopic){
 
+                            this->teleopStarted = false;
+                            this->axis_lock[3] = {0};
+                            this->motionScale = 2.0;
+
                             this->rob_pos_pub = this->node.advertise<geometry_msgs::PoseStamped>(this->robotPositionTopic.c_str(),1);  
                             this->rob_pos_sub = this->node.subscribe<iiwa_msgs::CartesianPose>(this->robotStateTopic.c_str(),1 ,&RobotHaptic::RobotPositionCallBack,this);
 
