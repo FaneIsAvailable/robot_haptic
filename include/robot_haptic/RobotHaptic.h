@@ -14,6 +14,19 @@ class RobotHaptic
 {
     public:
 
+        /**
+         * @brief Construct a new Robot Haptic object
+         * 
+         * @param node  ROS node
+         * @param loopRate ROS looprate
+         * @param robotPositionTopic topic that the robot subscribes to
+         * @param hapticPositionTopic  topic that the haptic device publishes to
+         * @param switchPositionTopic  topic for haptic gripper handleing
+         * @param robotStateTopic  topic for the robots current stat
+         * @param interfStartTopic topic for interface start command
+         * @param interfScaleTopic  topic for interface @horvathd2?
+         * @param interfAxisLockTopic topic for axis lock on the haptic device
+         */
         RobotHaptic(ros::NodeHandle node, float loopRate, 
                     std::string robotPositionTopic, std::string hapticPositionTopic,
                     std::string switchPositionTopic, std::string robotStateTopic,
@@ -21,12 +34,28 @@ class RobotHaptic
                     std::string interfAxisLockTopic);
         ~RobotHaptic();
 
+
         void publishRobotData();       
 
-        void processPos();
+        void processPos();// unused
 
+        /**
+         * @brief transform q quaternion into euler angles and saves the values into a class member called robotEuler[]
+         * 
+         * @param w quaternion w value
+         * @param x quaternion x value
+         * @param y quaternion y value
+         * @param z quaternion z value
+         */
         void toEuler(double w, double x, double y, double z);
 
+        /**
+         * @brief transforms a set of 3 euler angles into a quaternion
+         * 
+         * @param x first euler angle
+         * @param y second euler angle
+         * @param z third euler angle
+         */
         void toQuat(double x, double y, double z);
 
 
