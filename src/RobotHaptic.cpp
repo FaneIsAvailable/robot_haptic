@@ -97,11 +97,11 @@ void RobotHaptic::publishRobotData(){
             
             hapticOldPosition = hapticPosition;
 
-
             this->rob_pos_pub.publish(robotPosition);
-            this->loopRate.sleep();
-            //robotPosition = oldRobotPosition.poseStamped; 
         }   
+
+        this->loopRate.sleep();
+        //robotPosition = oldRobotPosition.poseStamped;
     }
     spinner.stop();
 }
