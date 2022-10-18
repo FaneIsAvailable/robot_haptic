@@ -2,7 +2,7 @@
 
 RobotHaptic::RobotHaptic(ros::NodeHandle node, float loopRate, std::string robotPositionTopic, std::string hapticPositionTopic, 
                          std::string switchPositionTopic, std::string robotStateTopic, std::string interfAxisLockTopic, 
-                         std::string interfStartOrientTopic, std::string interfOrientationTopic):
+                         std::string interfCommandsTopic, std::string interfOrientationTopic):
                          node(node), loopRate(loopRate), robotPositionTopic(robotPositionTopic), hapticPositionTopic(hapticPositionTopic), 
                          switchPositionTopic(switchPositionTopic), robotStateTopic(robotStateTopic), interfAxisLockTopic(interfAxisLockTopic), 
                          interfCommandsTopic(interfCommandsTopic), interfOrientationTopic(interfOrientationTopic){
