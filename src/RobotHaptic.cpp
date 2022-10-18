@@ -41,7 +41,7 @@ void RobotHaptic::publishRobotData(){
 
     while(ros::ok()){
         if(teleopStarted){
-            //geometry_msgs::Vector3 hapticDisplacement;
+            geometry_msgs::Vector3 hapticDisplacement;
             geometry_msgs::Vector3 hapticAngularDisplacement;
             geometry_msgs::PoseStamped robotDisplacement;
 
@@ -180,12 +180,12 @@ void RobotHaptic::InterfCommandsCallBack(const geometry_msgs::Vector3::ConstPtr 
     else
         this->teleopStarted = false;
 
-    this->motionScale = data->y;
-
-    if(data->z == 1.0)
+    if(data->y == 1.0)
         this->orientMode = true;
     else
         this->orientMode = false;
+
+    this->motionScale = data->z;
 }
 
 void RobotHaptic::InterfOrientationCallBack(const geometry_msgs::Vector3::ConstPtr &data){
