@@ -65,8 +65,6 @@ class RobotHaptic
         geometry_msgs::Twist hapticOldPosition;
         geometry_msgs::Twist hapticSwitch;
 
-        geometry_msgs::Vector3 robotPosition;
-
         double robotEuler[3];
         double robotQuat[4];
 
