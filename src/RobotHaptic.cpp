@@ -66,9 +66,9 @@ void RobotHaptic::publishRobotData(){
                     toEuler(robotPosition.pose.orientation.w,robotPosition.pose.orientation.x,
                     robotPosition.pose.orientation.y,robotPosition.pose.orientation.z);
 
-                    robotEuler[0] = robotEuler[0] + interfOrient[0]; //hapticAngularDisplacement.x/10;
-                    robotEuler[1] = robotEuler[1] + interfOrient[1]; //hapticAngularDisplacement.y/10;
-                    robotEuler[2] = robotEuler[2] + interfOrient[2]; //hapticAngularDisplacement.z/10;
+                    robotEuler[0] = robotEuler[0] + interfOrient[0]*3.1415/180; //hapticAngularDisplacement.x/10;
+                    robotEuler[1] = robotEuler[1] + interfOrient[1]*3.1415/180; //hapticAngularDisplacement.y/10;
+                    robotEuler[2] = robotEuler[2] + interfOrient[2]*3.1415/180; //hapticAngularDisplacement.z/10;
 
                     toQuat(robotEuler[0],robotEuler[1],robotEuler[2]);
 
@@ -77,6 +77,7 @@ void RobotHaptic::publishRobotData(){
                     robotPosition.pose.orientation.y = this->robotQuat[2];
                     robotPosition.pose.orientation.z = this->robotQuat[3];
                 }else{
+                    robotPosition.pose.orientation = oldRobotPosition.poseStamped.pose.orientation;
                     if(axis_lock[0]==1)
                         robotPosition.pose.position.x = robotPosition.pose.position.x;
                     else if(axis_lock[0]==0)
@@ -89,6 +90,7 @@ void RobotHaptic::publishRobotData(){
                         robotPosition.pose.position.z = robotPosition.pose.position.z;
                     else if(axis_lock[2]==0)
                         robotPosition.pose.position.z = robotPosition.pose.position.z - hapticDisplacement.z/1000 *motionScale;
+                    std::cout<<axis_lock[0]<<" "<<axis_lock[1]<<" "<<axis_lock[2]<<std::endl;
                 }
 
                 //std::cout<<"haptic disp: "<<hapticDisplacement.x<<" "<<hapticDisplacement.y<<" "<<hapticDisplacement.z<<"\n";
@@ -103,7 +105,6 @@ void RobotHaptic::publishRobotData(){
 
             this->rob_pos_pub.publish(robotPosition);
         }   
-
         this->loopRate.sleep();
         //robotPosition = oldRobotPosition.poseStamped;
     }
