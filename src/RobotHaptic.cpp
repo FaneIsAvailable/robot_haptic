@@ -23,7 +23,7 @@ RobotHaptic::RobotHaptic(ros::NodeHandle node, float loopRate, std::string robot
                             //this->interf_start_sub = this->node.subscribe<std_msgs::Float64>(this->interfStartTopic.c_str(),1, &RobotHaptic::InterfStartCallBack, this);
                             //this->interf_scale_sub = this->node.subscribe<std_msgs::Float64>(this->interfScaleTopic.c_str(),1, &RobotHaptic::InterfScaleCallBack, this);
                             this->interf_axis_sub = this->node.subscribe<geometry_msgs::Vector3>(this->interfAxisLockTopic.c_str(),1, &RobotHaptic::InterfAxisLockCallBack, this);
-                            this->interf_commands_sub = this->node.subscribe<geometry_msgs::Vector3>(this->interfCommandsTopic.c_str(),1, &RobotHaptic::InterfCommandsCallBack, this);
+                            this->interf_commands_sub = this->node.subscribe<std_msgs::Float64MultiArray>(this->interfCommandsTopic.c_str(),1, &RobotHaptic::InterfCommandsCallBack, this);
                             this->interf_orient_sub = this->node.subscribe<geometry_msgs::Vector3>(this->interfOrientationTopic.c_str(),1, &RobotHaptic::InterfOrientationCallBack, this);
                          }
 
@@ -167,7 +167,7 @@ void RobotHaptic::InterfAxisLockCallBack(const geometry_msgs::Vector3::ConstPtr 
     this->axis_lock[2] = data->z;
 }
 
-void RobotHaptic::InterfCommandsCallBack(const geometry_msgs::Vector3::ConstPtr &data){
+void RobotHaptic::InterfCommandsCallBack(const std_msgs::Float64MultiArray::ConstPtr &data){
     
     /*
     *  Vector3 command message structure
@@ -176,17 +176,17 @@ void RobotHaptic::InterfCommandsCallBack(const geometry_msgs::Vector3::ConstPtr 
     *  z -> MOTION SCALE FACTOR
     */
     
-    if(data->x == 1.0)              
+    if(data->data[0] == 1.0)              
         this->teleopStarted = true;
     else
         this->teleopStarted = false;
 
-    if(data->y == 1.0)
+    if(data->data[1] == 1.0)
         this->orientMode = true;
     else
         this->orientMode = false;
 
-    this->motionScale = data->z;
+    this->motionScale = data->data[2];
 }
 
 void RobotHaptic::InterfOrientationCallBack(const geometry_msgs::Vector3::ConstPtr &data){

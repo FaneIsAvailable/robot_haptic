@@ -8,6 +8,7 @@
 #include <geometry_msgs/Twist.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Float64.h>
+#include <std_msgs/Float64MultiArray.h>
 
 
 class RobotHaptic
@@ -91,7 +92,7 @@ class RobotHaptic
 
         void InterfAxisLockCallBack(const geometry_msgs::Vector3::ConstPtr &data);
 
-        void InterfCommandsCallBack(const geometry_msgs::Vector3::ConstPtr &data);
+        void InterfCommandsCallBack(const std_msgs::Float64MultiArray::ConstPtr &data);
 
         void InterfOrientationCallBack(const geometry_msgs::Vector3::ConstPtr &data);
 };
