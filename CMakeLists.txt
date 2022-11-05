@@ -13,13 +13,15 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  actionlib_msgs
+  actionlib
 )
 
 
 catkin_package(
   INCLUDE_DIRS include
 #  LIBRARIES force_haptic
-  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs geometry_msgs iiwa_msgs
+  CATKIN_DEPENDS geometry_msgs roscpp rospy std_msgs geometry_msgs iiwa_msgs actionlib_msgs actionlib
 #  DEPENDS system_lib
 )
 
@@ -72,11 +74,26 @@ set(SOURCES
     src/RobotHaptic.cpp
     src/robot_haptic_node.cpp
     include/robot_haptic/RobotHaptic.h
+   # src/robot_kinnect_node.cpp
+   # src/RobotKinnect.cpp
+   # include/robot_haptic/RobotKinnect.h
+  
+)
+set(SOURCES2
+    src/RobotKinnect.cpp
+    src/robot_kinnect_node.cpp
+    include/robot_haptic/RobotKinnect.h
 )
 
 
 add_executable(robot_haptic_node ${SOURCES})
-add_library(RobotHaptic src/RobotHaptic.cpp)
+add_executable(robot_kinnect_node ${SOURCES2})
+add_library(RobotHaptic 
+  src/RobotHaptic.cpp
+  src/RobotKinnect.cpp
+)
+
+
 
 target_link_libraries(robot_haptic_node
   ${catkin_LIBRARIES}
@@ -85,11 +102,30 @@ target_link_libraries(robot_haptic_node
   RobotHaptic
 )
 
+target_link_libraries(robot_kinnect_node
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(robot_kinnect_node
+  RobotHaptic
+)
+
+
+
+add_dependencies(robot_kinnect_node 
+                 ${catkin_EXPORTED_TARGETS} ${${PROJECT_NAME}_EXPORTED_TARGETS} )
+
+
 install(TARGETS robot_haptic_node
 ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
 )
+install(TARGETS robot_kinnect_node
+ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+RUNTIME DESTINATION ${CATKIN_GLOBAL_BIN_DESTINATION}
+)
+
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
