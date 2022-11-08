@@ -1,5 +1,5 @@
 
-#pragma once
+//#pragma once
 
 #include <ros/ros.h>
 #include <geometry_msgs/Vector3.h>
@@ -37,7 +37,8 @@ class RobotKinnect
                                                            std::string gripperForceTopic,
                                                            std::string gripperObjectTopic, 
                                                            std::string gripperStatusTopic,
-                                                           std::string gripperMotionTopic);
+                                                           std::string gripperMotionTopic,
+                                                           std::string handPositionTopic);
         ~RobotKinnect();
 
         void run();
@@ -58,6 +59,7 @@ class RobotKinnect
 
         void sendHome();
         void sendStarting();
+        bool checkHandPosition();
 
         ClientCartesian ac;
         ClientJoint acj;
@@ -66,6 +68,7 @@ class RobotKinnect
         ros::Rate loopRate;
 
         geometry_msgs::Vector3 objectPosition;
+        unsigned int gripperMoved;
 
     private:
 
@@ -84,6 +87,7 @@ class RobotKinnect
         ros::Subscriber gripper_status_sub;
         ros::Subscriber gripper_motion_sub;
         ros::Subscriber robot_position_sub;
+        ros::Subscriber hand_position_sub;
         
         std::string objectPositionTopic;
         std::string gripperModeTopic;
@@ -94,6 +98,7 @@ class RobotKinnect
         std::string gripperObjectTopic;
         std::string gripperStatusTopic;
         std::string gripperMotionTopic;
+        std::string handPositionTopic;
 
         
         std_msgs::Int8 gripperMode;
@@ -105,6 +110,7 @@ class RobotKinnect
         std_msgs::Int8 gripperStatus;
         std_msgs::Int8 motionStatus;
         tf::Point error;
+        geometry_msgs::Point handPosition;
 
         
 
@@ -113,6 +119,7 @@ class RobotKinnect
         void MotionStatusCallback(const std_msgs::Int8::ConstPtr &data);
         void ObjectPositionCallback(const geometry_msgs::Vector3::ConstPtr &data);
         void robotPositionCallback(const iiwa_msgs::CartesianPose &data);
+        void handPositionCallback(const geometry_msgs::Point::ConstPtr &data);
        bool gripperInMotion;
 
         

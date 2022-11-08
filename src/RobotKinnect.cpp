@@ -7,7 +7,8 @@ RobotKinnect::RobotKinnect( ros::NodeHandle node, float loopRate,
                             std::string gripperForceTopic,
                             std::string gripperObjectTopic, 
                             std::string gripperStatusTopic,
-                            std::string gripperMotionTopic):
+                            std::string gripperMotionTopic,
+                            std::string handPositionTopic):
                             node(node), 
                             loopRate(loopRate), 
                             objectPositionTopic(objectPositionTopic), 
@@ -17,23 +18,27 @@ RobotKinnect::RobotKinnect( ros::NodeHandle node, float loopRate,
                             gripperObjectTopic(gripperObjectTopic),
                             gripperStatusTopic(gripperStatusTopic), 
                             gripperMotionTopic(gripperMotionTopic),
+                            handPositionTopic(handPositionTopic),
                             order(0),
                             ac("/iiwa/action/move_to_cartesian_pose",true),
-                            acj("/iiwa/action/move_to_joint_position",true)
+                            acj("/iiwa/action/move_to_joint_position",true),
+                            gripperMoved(false)
                             {
                                 
                                 this->object_position_sub= this->node.subscribe<geometry_msgs::Vector3>(this->objectPositionTopic.c_str(),1,&RobotKinnect::ObjectPositionCallback, this);
                                 this->gripper_object_sub = this->node.subscribe<geometry_msgs::Vector3>(this->gripperObjectTopic.c_str(),1, &RobotKinnect::GripperObjectCallback, this);
                                 this->gripper_status_sub = this->node.subscribe<std_msgs::Int8>(this->gripperStatusTopic.c_str(), 1, &RobotKinnect::GripperStatusCallback,this);
                                 this->gripper_motion_sub = this->node.subscribe<std_msgs::Int8>(this->gripperMotionTopic.c_str(), 1, &RobotKinnect::MotionStatusCallback, this);
+                                this->hand_position_sub  = this->node.subscribe<geometry_msgs::Point>(this->handPositionTopic.c_str(),1, &RobotKinnect::handPositionCallback,this);
 
                                 this->gripper_mode_pub = this->node.advertise<std_msgs::Int8>(this->gripperModeTopic.c_str(),1);
                                 this->gripper_speed_position_pub = this->node.advertise<geometry_msgs::TwistStamped>(this->gripperSpeedPositionTopic.c_str(),1);
                                 this->gripper_force_pub = this->node.advertise<geometry_msgs::Vector3Stamped>(this->gripperForceTopic.c_str(),1);
                                 this->robot_home_pub = this->node.advertise<iiwa_msgs::JointPosition>("/iiwa/command/JointPosition",1);
+
                                 
                                 error.setX(0.0);
-                                error.setY(0.085);
+                                error.setY(0.092);
                                 error.setZ(0.0);
                             }
 RobotKinnect::~RobotKinnect(){}
@@ -72,13 +77,13 @@ void RobotKinnect::sendStarting(){
 geometry_msgs::Point RobotKinnect::cameraToRobot(const geometry_msgs::Vector3 &message){
     geometry_msgs::Point output;
     tf::Point point;
-    double alpha = 17.5;
+    double alpha = 15.8;
     alpha = (alpha* 355/113)/180;
   /**  output.x =   sin(0.31)*message.x - 6.1232e-17*message.y - cos(0.31)*message.z + 1.2500;
     output.y =   1.8840e-17*message.x + message.y + 8.4521e-17*message.z ;
     output.z =   cos(0.31)*message.x + 6.1232e-17*message.y - sin(0.31)*message.z - 0.3200;*/
    output.y = message.y + 0.085;
-   output.x = 1.27 - double(cos(alpha)*message.z) + double(sin(alpha)*message.x);
+   output.x = 1.3 - double(cos(alpha)*message.z) + double(sin(alpha)*message.x);
    output.z = 0.34 - double(sin(alpha)*message.z + cos(alpha)*message.x); 
    ROS_INFO_STREAM("OUTPUT VALUS: sin alpha z = "<<sin(alpha)*message.z <<
                    "cos alpha x =  "<< cos(alpha)*message.x<<
@@ -130,13 +135,13 @@ bool RobotKinnect::moveGripper(geometry_msgs::TwistStamped position, std_msgs::I
 
     if(this->motionStatus.data != 0 && this->gripperStatus.data != 1 && this->gripperStatus.data == 3)
         gripper_mode_pub.publish(mode);// 1 pinch, 0 basic
-    if(this->gripperStatus.data == 3)    
+    if(this->gripperStatus.data == 3)   {        
         gripper_speed_position_pub.publish(position);
-    
+    }
     ROS_INFO("im controlling gripper\n");
 
-    if(this->motionStatus.data != 0 )return true;
-    else return false;
+    if(this->motionStatus.data != 0 && this->gripperMoved >= 5){this->gripperMoved = 0; return true;}
+    else { this->gripperMoved ++; return false;}
 
 }
 
@@ -194,6 +199,22 @@ geometry_msgs::Quaternion RobotKinnect::euler2Quaternion(double x, double y, dou
     return output;
 };
 
+bool RobotKinnect::checkHandPosition(){
+    geometry_msgs::Vector3 parse;
+    geometry_msgs::Point robotPose;
+    parse.x = this->handPosition.x;
+    parse.y = this->handPosition.y;
+    parse.z = this->handPosition.z;
+    
+    robotPose = RobotKinnect::cameraToRobot(parse);
+    ROS_INFO_STREAM("HAND : x"<<robotPose.x<<" Y: "<<robotPose.y<<" Z: "<<robotPose.z);
+    if( robotPose.x>=0.38 && robotPose.x<=0.45 &&
+        robotPose.y>=0.05 && robotPose.y<=0.1 &&
+        robotPose.z>=0 && robotPose.z<=0.25
+        ) return true;
+    else  return false;
+}
+
 void RobotKinnect::GripperObjectCallback(const geometry_msgs::Vector3::ConstPtr &data){
     this->gripperObject.x = data->x;
     this->gripperObject.y = data->y;
@@ -213,4 +234,9 @@ void RobotKinnect::ObjectPositionCallback(const geometry_msgs::Vector3::ConstPtr
     this->objectPosition.z = data->z;
 
 };
+void RobotKinnect::handPositionCallback( const geometry_msgs::Point::ConstPtr &data){
+    this->handPosition.x = data->x;
+    this->handPosition.y = data->y;
+    this->handPosition.z = data->z;
+}
                      

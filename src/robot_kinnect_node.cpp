@@ -18,7 +18,8 @@ int main( int argc, char **argv)
                                 "/iiwa/command/GriperForce",
                                 "/iiwa/robotiq/state/FingerObject",
                                 "/iiwa/robotiq/state/GripperStatus",
-                                "/iiwa/robotiq/state/MotionStatus");
+                                "/iiwa/robotiq/state/MotionStatus",
+                                "/kinect2/hand3d");
 
    // ClientCartesian ac1("/iiwa/action/move_to_cartesian_pose",true);
     ROS_INFO("waiting for server");
@@ -41,6 +42,7 @@ int main( int argc, char **argv)
             {   
                 bool next = robot.moveGripper(robot.toggleGripper(false),mode);
                 robot.RobotKinnect::sendStarting();
+                 ROS_WARN_STREAM("GRIPPER STATUS:"<<next);
                 if(next){
                 robot.RobotKinnect::order++;
                 break;
@@ -107,6 +109,24 @@ int main( int argc, char **argv)
                 robot.sendStarting();
                 robot.RobotKinnect::order++;
                 break;
+            }
+            case 6:
+            {   
+                if(robot.checkHandPosition()){
+                bool next = robot.moveGripper(robot.toggleGripper(false),mode);
+                if(next){
+                    robot.RobotKinnect::order++;
+                    ROS_INFO_STREAM("gipper openenend ");
+                    break;
+                }
+                else break;
+                }
+                else break;
+            }
+            case 7:
+            {
+                robot.sendHome();
+                robot.order++;
             }
             default:
             {
