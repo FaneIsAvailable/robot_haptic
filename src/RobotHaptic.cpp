@@ -66,9 +66,9 @@ void RobotHaptic::publishRobotData(){
                     toEuler(robotPosition.pose.orientation.w,robotPosition.pose.orientation.x,
                     robotPosition.pose.orientation.y,robotPosition.pose.orientation.z);
 
-                    robotEuler[0] = robotEuler[0] + interfOrient[0]*3.1415/180; //hapticAngularDisplacement.x/10;
-                    robotEuler[1] = robotEuler[1] + interfOrient[1]*3.1415/180; //hapticAngularDisplacement.y/10;
-                    robotEuler[2] = robotEuler[2] + interfOrient[2]*3.1415/180; //hapticAngularDisplacement.z/10;
+                    robotEuler[0] = (robotEuler[0] + interfOrient[0]) * 3.1415/180; //hapticAngularDisplacement.x/10;
+                    robotEuler[1] = (robotEuler[1] + interfOrient[1]) * 3.1415/180; //hapticAngularDisplacement.y/10;
+                    robotEuler[2] = (robotEuler[2] + interfOrient[2]) * 3.1415/180; //hapticAngularDisplacement.z/10;
 
                     toQuat(robotEuler[0],robotEuler[1],robotEuler[2]);
 
@@ -170,7 +170,7 @@ void RobotHaptic::InterfAxisLockCallBack(const geometry_msgs::Vector3::ConstPtr 
 void RobotHaptic::InterfCommandsCallBack(const std_msgs::Float64MultiArray::ConstPtr &data){
     
     /*
-    *  Vector3 command message structure
+    *  Float64MultiArray command message structure
     *  x -> TELEOP START/STOP
     *  y -> ORIENTATION MODE START/STOP
     *  z -> MOTION SCALE FACTOR
