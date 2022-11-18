@@ -2,10 +2,10 @@
 
 RobotHaptic::RobotHaptic(ros::NodeHandle node, float loopRate, std::string robotPositionTopic, std::string hapticPositionTopic, 
                          std::string switchPositionTopic, std::string robotStateTopic, std::string interfAxisLockTopic, 
-                         std::string interfCommandsTopic, std::string interfOrientationTopic):
+                         std::string interfCommandsTopic, std::string interfOrientationTopic, std::string spaceNavTopic):
                          node(node), loopRate(loopRate), robotPositionTopic(robotPositionTopic), hapticPositionTopic(hapticPositionTopic), 
                          switchPositionTopic(switchPositionTopic), robotStateTopic(robotStateTopic), interfAxisLockTopic(interfAxisLockTopic), 
-                         interfCommandsTopic(interfCommandsTopic), interfOrientationTopic(interfOrientationTopic){
+                         interfCommandsTopic(interfCommandsTopic), interfOrientationTopic(interfOrientationTopic), spaceNavTopic(spaceNavTopic){
 
                             this->teleopStarted = false;
                             this->orientMode = false;
@@ -13,6 +13,10 @@ RobotHaptic::RobotHaptic(ros::NodeHandle node, float loopRate, std::string robot
                             this->axis_lock[3] = {0};
                             this->motionScale = 2.0;
                             this->interfOrient[3] = {0};
+                            this->prev_Orient[3] = {0};
+                            this->delta[3] = {0};
+                            this->spacenavJoy[3] = {0};
+                            this->spacenav_enabled = 0;
 
                             this->rob_pos_pub = this->node.advertise<geometry_msgs::PoseStamped>(this->robotPositionTopic.c_str(),1);  
                             this->rob_pos_sub = this->node.subscribe<iiwa_msgs::CartesianPose>(this->robotStateTopic.c_str(),1 ,&RobotHaptic::RobotPositionCallBack,this);
@@ -20,15 +24,13 @@ RobotHaptic::RobotHaptic(ros::NodeHandle node, float loopRate, std::string robot
                             this->haptic_pos_sub = this->node.subscribe<geometry_msgs::Twist>(this->hapticPositionTopic.c_str(),1, &RobotHaptic::HapticPositionCallBack, this);
                             this->haptic_switch_sub = this->node.subscribe<geometry_msgs::Twist>(this->switchPositionTopic.c_str(),1, &RobotHaptic::HapticSwitchCallBack, this);
 
-                            //this->interf_start_sub = this->node.subscribe<std_msgs::Float64>(this->interfStartTopic.c_str(),1, &RobotHaptic::InterfStartCallBack, this);
-                            //this->interf_scale_sub = this->node.subscribe<std_msgs::Float64>(this->interfScaleTopic.c_str(),1, &RobotHaptic::InterfScaleCallBack, this);
                             this->interf_axis_sub = this->node.subscribe<geometry_msgs::Vector3>(this->interfAxisLockTopic.c_str(),1, &RobotHaptic::InterfAxisLockCallBack, this);
                             this->interf_commands_sub = this->node.subscribe<std_msgs::Float64MultiArray>(this->interfCommandsTopic.c_str(),1, &RobotHaptic::InterfCommandsCallBack, this);
                             this->interf_orient_sub = this->node.subscribe<geometry_msgs::Vector3>(this->interfOrientationTopic.c_str(),1, &RobotHaptic::InterfOrientationCallBack, this);
-                         }
+                            this->spacenav_sub = this->node.subscribe<geometry_msgs::Twist>(this->spaceNavTopic.c_str(),1, &RobotHaptic::SpaceNavCallBack, this);
+ }
 
 RobotHaptic::~RobotHaptic(){
-    //nada boss
 }
 
 void RobotHaptic::publishRobotData(){
@@ -63,12 +65,55 @@ void RobotHaptic::publishRobotData(){
                 robotDisplacement.pose.position.z = hapticDisplacement.z;
 
                 if(orientMode){
+
                     toEuler(robotPosition.pose.orientation.w,robotPosition.pose.orientation.x,
                     robotPosition.pose.orientation.y,robotPosition.pose.orientation.z);
 
-                    robotEuler[0] = (robotEuler[0] + interfOrient[0]) * 3.1415/180; //hapticAngularDisplacement.x/10;
-                    robotEuler[1] = (robotEuler[1] + interfOrient[1]) * 3.1415/180; //hapticAngularDisplacement.y/10;
-                    robotEuler[2] = (robotEuler[2] + interfOrient[2]) * 3.1415/180; //hapticAngularDisplacement.z/10;
+                    //std::cout<<"ROBOTPOSE: "<<robotPosition.pose.orientation.w<<" "<<robotPosition.pose.orientation.x<<" "<<robotPosition.pose.orientation.y<<" "<<robotPosition.pose.orientation.z<<"\n"<<std::endl;
+                    //std::cout<<"EULER BEF: "<<robotEuler[0]<<" "<<robotEuler[1]<<" "<<robotEuler[2]<<std::endl;
+                    //std::cout<<"INERF ORIENT: "<<interfOrient[0]<<" "<<interfOrient[1]<<" "<<interfOrient[2]<<std::endl;
+
+                    if(spacenav_enabled){
+                        
+                        if(spacenavJoy[0]>=0.2 || spacenavJoy[0]<=-0.2){
+                            delta[0] = (this->spacenavJoy[0]/1000);
+                        }else
+                            delta[0] = 0;
+                        if(spacenavJoy[1]>=0.2 || spacenavJoy[1]<=-0.2){
+                            delta[1] = (this->spacenavJoy[1]/1000);
+                        }else
+                            delta[1] = 0;
+                        if(spacenavJoy[2]>=0.2 || spacenavJoy[2]<=-0.2){
+                            delta[2] = (this->spacenavJoy[2]/1000);
+                        }else
+                            delta[2] = 0;
+                        
+                        robotEuler[0] = robotEuler[0] + delta[0];                           
+                        robotEuler[1] = robotEuler[1] + delta[1];                           
+                        robotEuler[2] = robotEuler[2] + delta[2];                           
+
+                        std::cout<<"SPACENAV: "<< spacenavJoy[0]<<" "<<spacenavJoy[1]<<" "<<spacenavJoy[2]<<std::endl; 
+                        std::cout<<"DELTA: "<<delta[0]<<" "<<delta[1]<<" "<<delta[2]<<std::endl;               
+
+                        this->prev_Orient[0] = this->spacenavJoy[0];
+                        this->prev_Orient[1] = this->spacenavJoy[1];
+                        this->prev_Orient[2] = this->spacenavJoy[2];
+                        
+                    }else{
+                        delta[0] = this->interfOrient[0] - this->prev_Orient[0];
+                        delta[1] = this->interfOrient[1] - this->prev_Orient[1];
+                        delta[2] = this->interfOrient[2] - this->prev_Orient[2];
+
+                        std::cout<<"DELTA: "<<delta[0]<<" "<<delta[1]<<" "<<delta[2]<<std::endl;
+
+                        robotEuler[0] = robotEuler[0] + delta[0]; //hapticAngularDisplacement.x/10;
+                        robotEuler[1] = robotEuler[1] + delta[1]; //hapticAngularDisplacement.y/10;
+                        robotEuler[2] = robotEuler[2] + delta[2]; //hapticAngularDisplacement.z/10;
+
+                        this->prev_Orient[0] = this->interfOrient[0];
+                        this->prev_Orient[1] = this->interfOrient[1];
+                        this->prev_Orient[2] = this->interfOrient[2];
+                    }
 
                     toQuat(robotEuler[0],robotEuler[1],robotEuler[2]);
 
@@ -76,6 +121,10 @@ void RobotHaptic::publishRobotData(){
                     robotPosition.pose.orientation.x = this->robotQuat[1];
                     robotPosition.pose.orientation.y = this->robotQuat[2];
                     robotPosition.pose.orientation.z = this->robotQuat[3];
+
+                    std::cout<<"EULER: "<<robotEuler[0]<<" "<<robotEuler[1]<<" "<<robotEuler[2]<<std::endl;
+                    std::cout<<"PREV INTERF ORIENT: "<<prev_Orient[0]<<" "<<prev_Orient[1]<<" "<<prev_Orient[2]<<std::endl;
+                    std::cout<<"QUATERNIONI FINALI: "<<robotQuat[0]<<" "<<robotQuat[1]<<" "<<robotQuat[2]<<" "<<robotQuat[3]<<std::endl<<std::endl;
                 }else{
                     robotPosition.pose.orientation = oldRobotPosition.poseStamped.pose.orientation;
                     if(axis_lock[0]==1)
@@ -130,7 +179,6 @@ void RobotHaptic::toEuler(double w, double x, double y, double z){
 }
 
 void RobotHaptic::toQuat(double x, double y, double z){
-
     double cr = cos(x * 0.5);
     double sr = sin(x * 0.5);
     double cp = cos(y * 0.5);
@@ -142,7 +190,6 @@ void RobotHaptic::toQuat(double x, double y, double z){
     robotQuat[1] = sr * cp * cy - cr * sp * sy;
     robotQuat[2] = cr * sp * cy + sr * cp * sy;
     robotQuat[3] = cr * cp * sy - sr * sp * cy;
-
 }
 
 void RobotHaptic::RobotPositionCallBack(const iiwa_msgs::CartesianPose::ConstPtr &data){
@@ -187,10 +234,20 @@ void RobotHaptic::InterfCommandsCallBack(const std_msgs::Float64MultiArray::Cons
         this->orientMode = false;
 
     this->motionScale = data->data[2];
+    this->spacenav_enabled = data->data[13];
 }
 
 void RobotHaptic::InterfOrientationCallBack(const geometry_msgs::Vector3::ConstPtr &data){
     this->interfOrient[0] = data->x;
     this->interfOrient[1] = data->y;
     this->interfOrient[2] = data->z;
+}
+
+void RobotHaptic::SpaceNavCallBack(const geometry_msgs::Twist::ConstPtr &data){
+    this->spacenavJoy[0] = data->angular.x;
+    this->spacenavJoy[1] = data->angular.y;
+    this->spacenavJoy[2] = data->angular.z;
+
+    std::cout<<"SPACENAV: "<< spacenavJoy[0]<<" "<<spacenavJoy[1]<<" "<<spacenavJoy[2]<<std::endl<<std::endl; 
+
 }

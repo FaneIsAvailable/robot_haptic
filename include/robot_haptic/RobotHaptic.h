@@ -18,7 +18,7 @@ class RobotHaptic
         RobotHaptic(ros::NodeHandle node, float loopRate, 
                     std::string robotPositionTopic, std::string hapticPositionTopic, std::string switchPositionTopic, 
                     std::string robotStateTopic, std::string interfAxisLockTopic, std::string interfCommandsTopic,
-                    std::string interfOrientationTopic);
+                    std::string interfOrientationTopic, std::string spaceNavTopic);
         ~RobotHaptic();
 
         void publishRobotData();       
@@ -42,6 +42,7 @@ class RobotHaptic
         ros::Subscriber interf_axis_sub;
         ros::Subscriber interf_commands_sub;
         ros::Subscriber interf_orient_sub;
+        ros::Subscriber spacenav_sub;
 
         std::string robotPositionTopic;
         std::string hapticPositionTopic;
@@ -51,22 +52,29 @@ class RobotHaptic
         std::string interfAxisLockTopic;
         std::string interfCommandsTopic;
         std::string interfOrientationTopic;
+        std::string spaceNavTopic;
 
-        geometry_msgs::PoseStamped robotPosition;
         iiwa_msgs::CartesianPose oldRobotPosition;
+        geometry_msgs::PoseStamped robotPosition;
         geometry_msgs::Twist hapticPosition;
         geometry_msgs::Twist hapticOldPosition;
         geometry_msgs::Twist hapticSwitch;
 
         double robotEuler[3];
         double robotQuat[4];
+        double spacenavJoy[3];
 
         double interfOrient[3];
+        double prev_Orient[3];
+        double delta[3];
+
+        double rotation_step;
 
         bool teleopStarted;
         bool orientMode;
 
         int axis_lock[3];
+        int spacenav_enabled;
 
         double motionScale;
 
@@ -81,6 +89,8 @@ class RobotHaptic
         void InterfCommandsCallBack(const std_msgs::Float64MultiArray::ConstPtr &data);
 
         void InterfOrientationCallBack(const geometry_msgs::Vector3::ConstPtr &data);
+        
+        void SpaceNavCallBack(const geometry_msgs::Twist::ConstPtr &data);
 };
 
 
