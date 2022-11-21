@@ -76,15 +76,15 @@ void RobotHaptic::publishRobotData(){
                     if(spacenav_enabled){
                         
                         if(spacenavJoy[0]>=0.2 || spacenavJoy[0]<=-0.2){
-                            delta[0] = (this->spacenavJoy[0]/1000);
+                            delta[0] = (this->spacenavJoy[0]/rotation_step);
                         }else
                             delta[0] = 0;
                         if(spacenavJoy[1]>=0.2 || spacenavJoy[1]<=-0.2){
-                            delta[1] = (this->spacenavJoy[1]/1000);
+                            delta[1] = (this->spacenavJoy[1]/rotation_step);
                         }else
                             delta[1] = 0;
                         if(spacenavJoy[2]>=0.2 || spacenavJoy[2]<=-0.2){
-                            delta[2] = (this->spacenavJoy[2]/1000);
+                            delta[2] = (this->spacenavJoy[2]/rotation_step);
                         }else
                             delta[2] = 0;
                         
@@ -123,7 +123,7 @@ void RobotHaptic::publishRobotData(){
                     robotPosition.pose.orientation.z = this->robotQuat[3];
 
                     std::cout<<"EULER: "<<robotEuler[0]<<" "<<robotEuler[1]<<" "<<robotEuler[2]<<std::endl;
-                    std::cout<<"PREV INTERF ORIENT: "<<prev_Orient[0]<<" "<<prev_Orient[1]<<" "<<prev_Orient[2]<<std::endl;
+                    std::cout<<"PREV ORIENT: "<<prev_Orient[0]<<" "<<prev_Orient[1]<<" "<<prev_Orient[2]<<std::endl;
                     std::cout<<"QUATERNIONI FINALI: "<<robotQuat[0]<<" "<<robotQuat[1]<<" "<<robotQuat[2]<<" "<<robotQuat[3]<<std::endl<<std::endl;
                 }else{
                     robotPosition.pose.orientation = oldRobotPosition.poseStamped.pose.orientation;
@@ -235,6 +235,7 @@ void RobotHaptic::InterfCommandsCallBack(const std_msgs::Float64MultiArray::Cons
 
     this->motionScale = data->data[2];
     this->spacenav_enabled = data->data[13];
+    this->rotation_step = data->data[13];
 }
 
 void RobotHaptic::InterfOrientationCallBack(const geometry_msgs::Vector3::ConstPtr &data){
