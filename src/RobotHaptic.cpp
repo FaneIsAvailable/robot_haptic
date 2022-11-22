@@ -9,6 +9,7 @@ RobotHaptic::RobotHaptic(ros::NodeHandle node, float loopRate, std::string robot
 
                             this->teleopStarted = false;
                             this->orientMode = false;
+                            this->rfaStart = false;
 
                             this->axis_lock[3] = {0};
                             this->motionScale = 2.0;
@@ -152,7 +153,8 @@ void RobotHaptic::publishRobotData(){
 
             hapticOldPosition = hapticPosition;
 
-            this->rob_pos_pub.publish(robotPosition);
+            if(!rfaStart)
+                this->rob_pos_pub.publish(robotPosition);
         }   
         this->loopRate.sleep();
         //robotPosition = oldRobotPosition.poseStamped;
@@ -232,6 +234,11 @@ void RobotHaptic::InterfCommandsCallBack(const std_msgs::Float64MultiArray::Cons
         this->orientMode = true;
     else
         this->orientMode = false;
+
+    if(data->data[12] == 1.0)
+        this->rfaStart = true;
+    else
+        this->rfaStart = false;
 
     this->motionScale = data->data[2];
     this->spacenav_enabled = data->data[13];

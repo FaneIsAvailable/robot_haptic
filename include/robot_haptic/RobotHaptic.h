@@ -71,6 +71,7 @@ class RobotHaptic
         double rotation_step;
 
         bool teleopStarted;
+        bool rfaStart;
         bool orientMode;
 
         int axis_lock[3];
